@@ -1,18 +1,14 @@
-# ============================================================
-# Git에 올리지 말아야 할 파일/폴더 목록
-# ============================================================
-
-# 환경 변수 파일 (보안)
+# Local secrets
 .env
-
-# Python 캐시/임시 파일
-__pycache__/
-*.pyc
-
-# 기타 OS/IDE 자동 생성 파일
-.DS_Store
-.vscode/
-
-# 가상환경 제외
+.env.*
+!.env.example
+!.env.*.example
+# Python virtual environments and generated files
 .venv/
 venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# Local editors and OS files
+.DS_Store
+.vscode/

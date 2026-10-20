@@ -1,98 +1,45 @@
-## ⚙️ 사전 준비 프로그램
-팀원들이 프로젝트를 실행하기 위해 필요한 프로그램들:
+# 학사정보 AI 챗봇
 
-1. **Windows Subsystem for Linux 2 (WSL2)**
-   - Microsoft Store에서 Ubuntu 설치
-   - 최신 버전으로 업데이트 필요
+학사 자료를 검색해 질문에 답하고 음성 입출력을 연결하는 학교 팀 프로젝트입니다.
 
-2. **Docker Desktop**
-   - Windows에서 실행
-   - WSL2 기반으로 동작
-   - NVIDIA Container Toolkit 연동 필요
+## 프로젝트와 기여 범위
 
-3. **NVIDIA GPU 드라이버**
-   - CUDA 지원 GPU 환경 필요
-   - `nvidia-smi`로 정상 작동 확인
+최소원은 팀원 1명과 AI 파트를 공동 담당했습니다. 문서 처리·벡터 검색·LLM 응답과 Python 음성 입출력 기능 구성에 참여했습니다. 팀 전체 프런트엔드·서버·DB를 혼자 구현한 것으로 기재하지 않습니다.
 
-4. **Python 3.10+**
-   - `requests`, `openai` 패키지 설치 필요
+학교 프로젝트 결과물이며 실제 학사 시스템 연계나 상용 운영 성과를 제시하지 않습니다.
 
-  ---------------------------------------------
-## 팀원용 MySQL 설치 & DB 세팅 가이드
-1. MySQL 설치
-Windows
+## 처리 흐름
 
-MySQL Installer
- 다운로드
+학사 PDF·MongoDB 문서 → 텍스트 처리·분할 → 임베딩·Chroma 검색 → 관련 문맥과 질문을 LLM에 전달 → 응답
 
-설치 시 Server Only 또는 Developer Default 선택
+음성 입력은 STT로 텍스트로 바꾸고, 응답은 TTS로 음성 출력하는 구성을 포함합니다.
 
-root 계정 비밀번호 설정 (꼭 기억하기!)
+## 코드 살펴보기
 
-Mac
+| 위치 | 내용 |
+| --- | --- |
+| [ai/rag](ai/rag) | 문서 수집·인덱싱·검색과 질의 응답 |
+| [ai/llm_runtime](ai/llm_runtime) | LLM 호출과 설정 |
+| [ai/stt-tts-sample](ai/stt-tts-sample) | FastAPI 기반 음성·챗봇 테스트 서버 |
+| [front](front) | 팀 프런트엔드 자료 |
 
-Homebrew로 설치:
+Python · FastAPI · SentenceTransformers · Chroma · LangChain · faster-whisper · edge-tts를 사용한 코드가 포함되어 있습니다. 각 코드 파일의 구체적인 개인 기여는 팀 공동 작업과 구분해 설명합니다.
 
-brew install mysql
+## 구현 과정에서 살펴볼 사례
 
+- 문서 처리·검색·응답으로 이어지는 입력과 출력 연결
+- 검색 결과와 답변 생성 단계 분리
+- 음성 인식·합성과 API 연결
+- 패키지 내부 상대 임포트 문제와 해결 기록: [error.md](error.md)
 
-서비스 시작:
+## 실행과 환경
 
-brew services start mysql
+[AI 구성 안내](ai/README_ai.md)에 컴포넌트별 설명과 실행 절차가 있습니다. 기존 팀원 설치·DB 안내는 [docs/team-setup.md](docs/team-setup.md)에 보존했습니다.
 
+실제 API 키와 DB 접속값은 제공하지 않습니다. 각 .env.example을 참고해 로컬 환경을 구성합니다. 가상환경과 캐시는 저장소에서 제외하고 필요한 의존성을 다시 설치합니다.
 
-root 계정 보안 설정 실행:
+## 현재 확인 범위
 
-mysql_secure_installation
+2026-10-20 저장소 정리에서는 코드와 문서 구조를 확인했습니다. API 키·MongoDB·모델을 연결한 전체 실행과 응답 품질·속도 측정은 새로 수행하지 않았습니다. 기존 요구사항 파일에는 openai 버전 상충 등 환경 정리가 필요한 항목이 있으며, 설치 성공을 보장하지 않습니다. 개발용 디버그 API가 포함되어 있으므로 그대로 외부 서비스로 배포하지 않습니다.
 
-
-VALIDATE PASSWORD: n (비밀번호 규칙 강제 안 함, 팀 작업 편리함)
-
-root 비밀번호 새로 입력 → 꼭 기억하기
-
-익명 사용자 삭제: y
-
-원격 root 접속 차단: y
-
-test DB 삭제: y
-
-권한 새로고침: y
-
-2. MySQL 접속
-mysql -u root -p
-
-
-👉 위 명령 실행 후 비밀번호 입력하면 MySQL 콘솔 접속됨.
-
-3. 데이터베이스 생성
-CREATE DATABASE dmu CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-
-4. SQL 파일 불러오기
-
-(같은 폴더에 dmu.sql 파일이 있다고 가정)
-
-Windows (PowerShell / CMD)
-mysql -u root -p dmu < dmu.sql
-
-Mac (터미널)
-mysql -u root -p dmu < dmu.sql
-
-5. 확인
-
-MySQL 접속 후:
-
-USE dmu;
-SHOW TABLES;
-
-
-👉 테이블이 보이면 성공 ✅
-
-6. 팀원 공통 주의사항
-
-root 비밀번호를 잊지 말 것
-
-DB 이름은 반드시 dmu
-
-SQL 불러오기 전에 DB가 생성돼 있어야 함
-
-dmu.sql 파일은 최신 버전을 공유해서 동일하게 맞출 것
+DMU.zip은 기존 팀 자료로 보존했습니다. 최신 AI 코드는 ai/ 아래에서 확인합니다.
